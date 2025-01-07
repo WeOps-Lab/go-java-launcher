@@ -5,7 +5,7 @@ env:
   CONFIG_FILE_PATH: ./config.yml
 javaHome: /Users/fanzhongming/Library/Java/JavaVirtualMachines/openjdk-21.0.2/Contents/Home
 classpath:
-  - ./quarkus-app/quarkus-run.jar
+  - ./jdbc_exporter-1.0-SNAPSHOT-runner.jar
 jvmOpts:
-  - '-Xmx4M'
+  - '-Xmx50M'
 
