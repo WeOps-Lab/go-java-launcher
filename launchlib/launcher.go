@@ -109,8 +109,8 @@ func compileCmdFromConfig(
 		}
 		args = append(args, executable) // 0th argument is the command itself
 		args = append(args, jvmOpts...)
-		args = append(args, "-classpath", classpath)
-		args = append(args, staticConfig.JavaConfig.MainClass)
+		args = append(args, "-jar", classpath)
+		//args = append(args, staticConfig.JavaConfig.MainClass)
 	} else if staticConfig.Type == "executable" {
 		executable, executableErr = verifyPathIsSafeForExec(staticConfig.Executable)
 		if executableErr != nil {

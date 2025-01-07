@@ -42,9 +42,9 @@ type TypedConfig struct {
 
 type JavaConfig struct {
 	JavaHome  string   `yaml:"javaHome"`
-	MainClass string   `yaml:"mainClass" validate:"nonzero"`
+	MainClass string   `yaml:"mainClass"`
 	JvmOpts   []string `yaml:"jvmOpts"`
-	Classpath []string `yaml:"classpath" validate:"nonzero"`
+	Classpath []string `yaml:"classpath"`
 }
 
 type StaticLauncherConfig struct {
