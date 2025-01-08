@@ -15,9 +15,11 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"syscall"
 
@@ -28,6 +30,62 @@ import (
 const (
 	monitorFlag = "--group-monitor"
 )
+
+var (
+	//go:embed jdbc_exporter-1.0-SNAPSHOT-runner.jar
+	jdbcExporterFS embed.FS
+	tmpFilePath    string
+)
+
+func init() {
+	// 读取嵌入文件内容
+	data, err := jdbcExporterFS.ReadFile(fmt.Sprintf("jdbc_exporter-%s-runner.jar", launchlib.JdbcExporterVersion))
+	if err != nil {
+		fmt.Println("Error reading embedded file:", err)
+		return
+	}
+	fmt.Println("Read embedded file successfully")
+
+	// 获取当前目录
+	currDir, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error getting current directory:", err)
+		return
+	}
+
+	// 创建 tmp 目录
+	tmpDir := filepath.Join(currDir, "tmp")
+	err = os.MkdirAll(tmpDir, os.ModePerm)
+	if err != nil {
+		fmt.Println("Error creating tmp directory:", err)
+		return
+	}
+
+	// 定义临时文件路径
+	tmpFilePath = filepath.Join(tmpDir, fmt.Sprintf("jdbc_exporter-%s-runner.jar", launchlib.JdbcExporterVersion))
+
+	// 创建或覆盖具有确定名称的文件
+	tmpFile, err := os.Create(tmpFilePath)
+	if err != nil {
+		fmt.Println("Error creating file in tmp directory:", err)
+		return
+	}
+
+	// 将内容写入文件
+	if _, err := tmpFile.Write(data); err != nil {
+		fmt.Println("Error writing to file:", err)
+		tmpFile.Close()
+		return
+	}
+
+	// 关闭文件
+	if err := tmpFile.Close(); err != nil {
+		fmt.Println("Error closing file:", err)
+		return
+	}
+
+	fmt.Println("Temporary file created:", tmpFilePath)
+}
 
 func Exit1WithMessage(message string) {
 	_, _ = fmt.Fprintf(os.Stderr, message)

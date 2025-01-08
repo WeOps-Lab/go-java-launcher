@@ -28,6 +28,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	JdbcExporterVersion = "1.0-SNAPSHOT"
+)
+
 var (
 	processNamePattern = regexp.MustCompile("^[a-z0-9-]+$")
 )
