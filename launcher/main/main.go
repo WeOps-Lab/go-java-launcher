@@ -126,7 +126,11 @@ func GenerateMonitorArgs(monitor *launchlib.ProcessMonitor) []string {
 }
 
 func main() {
-	staticConfigFile := "launcher-static.yml"
+	staticConfigFile := os.Getenv("LAUNCHER_STATIC_FILE")
+	if staticConfigFile == "" {
+		staticConfigFile = "launcher-static.yml"
+	}
+
 	customConfigFile := "launcher-custom.yml"
 	stdout := os.Stdout
 
