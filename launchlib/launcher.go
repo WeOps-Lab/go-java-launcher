@@ -16,6 +16,7 @@ package launchlib
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"os/exec"
@@ -76,11 +77,10 @@ func compileCmdFromConfig(
 			err = errors.Wrapf(err, "unable to close command compilation logger")
 		}
 	}()
-	_, _ = fmt.Fprintf(logger, "Launching with static configuration %v and custom configuration %v\n",
-		*staticConfig, *customConfig)
+	log.Infof("Launching with static configuration %v and custom configuration %v\n", *staticConfig, *customConfig)
 
 	workingDir := getWorkingDir()
-	_, _ = fmt.Fprintf(logger, "Working directory: %s\n", workingDir)
+	log.Infof("Working directory: %s", workingDir)
 
 	var args []string
 	var executable string
@@ -91,11 +91,11 @@ func compileCmdFromConfig(
 		if javaHomeErr != nil {
 			return nil, javaHomeErr
 		}
-		_, _ = fmt.Fprintf(logger, "Using JAVA_HOME: %s\n", javaHome)
+		log.Infof("Using JAVA_HOME: %s", javaHome)
 
 		classpath := joinClasspathEntries(absolutizeClasspathEntries(workingDir,
 			staticConfig.JavaConfig.Classpath))
-		_, _ = fmt.Fprintf(logger, "Classpath: %s\n", classpath)
+		log.Infof("Classpath: %s", classpath)
 
 		var combinedJvmOpts []string
 		combinedJvmOpts = append(combinedJvmOpts, staticConfig.JavaConfig.JvmOpts...)
@@ -135,7 +135,7 @@ func compileCmdFromConfig(
 		args = cgexecArgs
 	}
 
-	_, _ = fmt.Fprintf(logger, "Argument list to executable binary: %v\n\n", args)
+	log.Infof("Argument list to executable binary: %v", args)
 
 	env := replaceEnvironmentVariables(merge(staticConfig.Env, customConfig.Env))
 
@@ -149,7 +149,7 @@ func MkDirs(dirs []string, stdout io.Writer) error {
 			return fmt.Errorf("Cannot create directory with non [A-Za-z0-9] characters: %s", dir)
 		}
 
-		_, _ = fmt.Fprintf(stdout, "Creating directory: %s\n", dir)
+		log.Infof("Creating directory: %s", dir)
 		if err := os.MkdirAll(dir, 0700); err != nil {
 			return err
 		}

@@ -16,6 +16,7 @@ package cli
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -77,7 +78,7 @@ func startCommand(ctx cli.Context, cmdCtx CommandContext) error {
 	}
 	defer func() {
 		if cErr := logger.Close(); cErr != nil {
-			_, _ = fmt.Fprintf(ctx.App.Stdout, "failed to close logger for command")
+			log.Errorf("failed to close logger for command: %v", cErr)
 		}
 	}()
 	cmdCtx.Command.Stdout = logger

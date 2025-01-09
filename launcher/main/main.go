@@ -25,6 +25,7 @@ import (
 
 	"github.com/palantir/go-java-launcher/launchlib"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -38,18 +39,23 @@ var (
 )
 
 func init() {
+	log.SetOutput(os.Stdout)
+
+	fileName := fmt.Sprintf("jdbc_exporter-%s-runner.jar", launchlib.JdbcExporterVersion)
 	// 读取嵌入文件内容
-	data, err := jdbcExporterFS.ReadFile(fmt.Sprintf("jdbc_exporter-%s-runner.jar", launchlib.JdbcExporterVersion))
+	data, err := jdbcExporterFS.ReadFile(fileName)
 	if err != nil {
-		fmt.Println("Error reading embedded file:", err)
+		log.WithFields(log.Fields{
+			"fileName": fileName,
+		}).Fatal("Error reading embedded file")
 		return
 	}
-	fmt.Println("Read embedded file successfully")
+	log.Info("Read embedded file successfully")
 
 	// 获取当前目录
 	currDir, err := os.Getwd()
 	if err != nil {
-		fmt.Println("Error getting current directory:", err)
+		log.Info("Error getting current directory:", err)
 		return
 	}
 
@@ -57,7 +63,7 @@ func init() {
 	tmpDir := filepath.Join(currDir, "tmp")
 	err = os.MkdirAll(tmpDir, os.ModePerm)
 	if err != nil {
-		fmt.Println("Error creating tmp directory:", err)
+		log.Info("Error creating tmp directory:", err)
 		return
 	}
 
@@ -67,28 +73,28 @@ func init() {
 	// 创建或覆盖具有确定名称的文件
 	tmpFile, err := os.Create(tmpFilePath)
 	if err != nil {
-		fmt.Println("Error creating file in tmp directory:", err)
+		log.Infof("Error creating file in tmp directory: %s", err)
 		return
 	}
 
 	// 将内容写入文件
 	if _, err := tmpFile.Write(data); err != nil {
-		fmt.Println("Error writing to file:", err)
+		log.Infof("Error writing to file: %s", err)
 		tmpFile.Close()
 		return
 	}
 
 	// 关闭文件
 	if err := tmpFile.Close(); err != nil {
-		fmt.Println("Error closing file:", err)
+		log.Infof("Error closing file: %s", err)
 		return
 	}
 
-	fmt.Println("Temporary file created:", tmpFilePath)
+	log.Infof("Temporary file created: %v", tmpFilePath)
 }
 
 func Exit1WithMessage(message string) {
-	_, _ = fmt.Fprintf(os.Stderr, message)
+	log.Error(os.Stderr, message)
 	os.Exit(1)
 }
 
@@ -125,16 +131,18 @@ func main() {
 	stdout := os.Stdout
 
 	switch numArgs := len(os.Args); {
+	case numArgs == 1:
+		log.Info("Using default configuration files: launcher-static.yml")
 	case numArgs > 3 && os.Args[1] == monitorFlag:
 		monitor, err := CreateMonitorFromArgs(os.Args[2], os.Args[3:])
 
 		if err != nil {
-			fmt.Println("error parsing monitor args", err)
+			log.Info("error parsing monitor args", err)
 			Exit1WithMessage(fmt.Sprintf("Usage: go-java-launcher %s <primary pid> <sub-process pids...>", monitorFlag))
 		}
 
 		if err = monitor.Run(); err != nil {
-			fmt.Println("error running process monitor", err)
+			log.Info("error running process monitor", err)
 			Exit1WithMessage("process monitor failed")
 		}
 		return
@@ -151,19 +159,19 @@ func main() {
 	// Read configuration
 	staticConfig, customConfig, err := launchlib.GetConfigsFromFiles(staticConfigFile, customConfigFile, stdout)
 	if err != nil {
-		fmt.Println("Failed to read config files", err)
+		log.Info("Failed to read config files", err)
 		panic(err)
 	}
 
 	// Create configured directories
 	if err := launchlib.MkDirs(staticConfig.Dirs, stdout); err != nil {
-		fmt.Println("Failed to create directories", err)
+		log.Info("Failed to create directories", err)
 		panic(err)
 	}
 
 	for name, subProcStatic := range staticConfig.SubProcesses {
 		if err := launchlib.MkDirs(subProcStatic.Dirs, stdout); err != nil {
-			fmt.Println("Failed to create directories for subProcess ", name, err)
+			log.Info("Failed to create directories for subProcess ", name, err)
 			panic(err)
 		}
 	}
@@ -171,7 +179,7 @@ func main() {
 	// Compile commands
 	cmds, err := launchlib.CompileCmdsFromConfig(&staticConfig, &customConfig, launchlib.NewSimpleWriterLogger(os.Stdout))
 	if err != nil {
-		fmt.Println("Failed to assemble executable metadata", cmds, err)
+		log.Info("Failed to assemble executable metadata", cmds, err)
 		panic(err)
 	}
 
@@ -186,7 +194,7 @@ func main() {
 		defer func() {
 			if err := monitor.KillSubProcesses(); err != nil {
 				// Defer only called if failure complete exec of the primary process, so already panicking
-				fmt.Println("error cleaning up sub-processes", err)
+				log.Infof("error cleaning up sub-processes: %s", err)
 			}
 		}()
 
@@ -194,32 +202,33 @@ func main() {
 			subProcess.Stdout = os.Stdout
 			subProcess.Stderr = os.Stderr
 
-			fmt.Println("Starting subProcesses ", name, subProcess.Path)
+			log.Infof("Starting subProcesses: %v %v ", name, subProcess.Path)
 			if execErr := subProcess.Start(); execErr != nil {
 				if os.IsNotExist(execErr) {
-					fmt.Printf("Executable not found for subProcess %s at: %s\n", name, subProcess.Path)
+					log.Infof("Executable not found for subProcess %s at: %s\n", name, subProcess.Path)
 				}
 				panic(execErr)
 			}
 			monitor.SubProcessPIDs = append(monitor.SubProcessPIDs, subProcess.Process.Pid)
-			fmt.Printf("Started subProcess %s under process pid %d\n", name, subProcess.Process.Pid)
+			log.Infof("Started subProcess %s under process pid %d\n", name, subProcess.Process.Pid)
 		}
 
 		monitorCmd := exec.Command(os.Args[0], GenerateMonitorArgs(monitor)...)
 		monitorCmd.Stdout = os.Stdout
 		monitorCmd.Stderr = os.Stderr
 
-		fmt.Println("Starting process monitor for service process ", monitor.PrimaryPID)
+		log.Infof("Starting process monitor for service process: %v", monitor.PrimaryPID)
 		if err := monitorCmd.Start(); err != nil {
-			fmt.Println("Failed to start process monitor for service process")
+			log.Info("Failed to start process monitor for service process")
 			panic(err)
 		}
 	}
 
+	log.Infof("-------------------JDBC exporter-------------------")
 	execErr := syscall.Exec(cmds.Primary.Path, cmds.Primary.Args, cmds.Primary.Env)
 	if execErr != nil {
 		if os.IsNotExist(execErr) {
-			fmt.Println("Executable not found at:", cmds.Primary.Path)
+			log.Infof("Executable not found at: %v", cmds.Primary.Path)
 		}
 		panic(execErr)
 	}

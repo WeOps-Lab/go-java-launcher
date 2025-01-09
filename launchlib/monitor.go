@@ -16,6 +16,7 @@ package launchlib
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"syscall"
@@ -132,7 +133,7 @@ func SignalPid(pid int, sign os.Signal) error {
 	}
 
 	if err := process.Signal(sign); err != nil {
-		fmt.Println("error signalling sub-process", pid, err, sign)
+		log.Errorf("error signalling sub-process %d: %v", pid, err)
 		return err
 	}
 	return nil

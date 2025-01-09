@@ -16,6 +16,7 @@ package launchlib
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"path"
@@ -275,8 +276,7 @@ func parseCustomConfig(yamlString []byte) (PrimaryCustomLauncherConfig, error) {
 
 func getCustomConfigFromFile(customConfigFile string, stdout io.Writer) (PrimaryCustomLauncherConfig, error) {
 	if customData, err := ioutil.ReadFile(customConfigFile); err != nil {
-		_, _ = fmt.Fprintf(stdout, "Failed to read custom config file, assuming no custom config: %s\n",
-			customConfigFile)
+		log.Infof("Failed to read custom config file, assuming no custom config: %s", customConfigFile)
 		return PrimaryCustomLauncherConfig{}, nil
 	} else if customConfig, err := parseCustomConfig(customData); err != nil {
 		return PrimaryCustomLauncherConfig{}, err
