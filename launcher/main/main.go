@@ -236,4 +236,7 @@ func main() {
 		}
 		panic(execErr)
 	}
+
+	log.Infof("JDBC exporter started successfully")
+	log.Infof("Java process started with pid %d", os.Getpid())
 }
