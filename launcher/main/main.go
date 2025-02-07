@@ -17,15 +17,13 @@ package main
 import (
 	"embed"
 	"fmt"
+	"github.com/palantir/go-java-launcher/launchlib"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"syscall"
-
-	"github.com/palantir/go-java-launcher/launchlib"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -229,7 +227,11 @@ func main() {
 	}
 
 	log.Infof("-------------------JDBC exporter-------------------")
-	execErr := syscall.Exec(cmds.Primary.Path, cmds.Primary.Args, cmds.Primary.Env)
+	// 日志使用java进程的日志
+	cmds.Primary.Stdout = os.Stdout
+	cmds.Primary.Stderr = os.Stderr
+
+	execErr := cmds.Primary.Start()
 	if execErr != nil {
 		if os.IsNotExist(execErr) {
 			log.Infof("Executable not found at: %v", cmds.Primary.Path)
@@ -238,5 +240,12 @@ func main() {
 	}
 
 	log.Infof("JDBC exporter started successfully")
-	log.Infof("Java process started with pid %d", os.Getpid())
+	log.Infof("Java process started with pid %d", cmds.Primary.Process.Pid)
+	log.Infof("Binary process started with pid %d", os.Getpid())
+
+	// Wait for the primary process to finish
+	if err := cmds.Primary.Wait(); err != nil {
+		log.Infof("Primary process exited with error: %v", err)
+		panic(err)
+	}
 }
