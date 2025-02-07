@@ -32,17 +32,17 @@ build:
 # Cross compile for linux
 build-linux:
 	@echo "Building for Linux..."
-	GOOS=linux GOARCH=amd64 $(BUILD_CMD) -o $(BUILD_DIR)/$(BINARY_NAME)_linux_amd64_$(VERSION) $(MAIN_ENTRY)
+	GOOS=linux GOARCH=amd64 $(BUILD_CMD) -o $(BUILD_DIR)/$(BINARY_NAME)_linux_amd64 $(MAIN_ENTRY)
 
 # Cross compile for linux-arm64
 build-linux-arm64:
 	@echo "Building for Linux ARM64..."
-	GOOS=linux GOARCH=arm64 $(BUILD_CMD) -o $(BUILD_DIR)/$(BINARY_NAME)_linux_arm64_$(VERSION) $(MAIN_ENTRY)
+	GOOS=linux GOARCH=arm64 $(BUILD_CMD) -o $(BUILD_DIR)/$(BINARY_NAME)_linux_arm64 $(MAIN_ENTRY)
 
 # Cross compile for windows
 build-windows:
 	@echo "Building for Windows..."
-	GOOS=windows GOARCH=amd64 $(BUILD_CMD) -o $(BUILD_DIR)/$(BINARY_NAME)_windows_amd64_$(VERSION).exe $(MAIN_ENTRY)
+	GOOS=windows GOARCH=amd64 $(BUILD_CMD) -o $(BUILD_DIR)/$(BINARY_NAME)_windows_amd64.exe $(MAIN_ENTRY)
 
 # Run the project (does not produce a binary)
 run:
