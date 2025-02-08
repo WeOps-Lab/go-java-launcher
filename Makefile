@@ -14,7 +14,7 @@ CLEAN_CMD=go clean
 VET_CMD=go vet
 
 # Build output directories
-BUILD_DIR=build
+BUILD_DIR?=build
 
 # Set version
 VERSION := 1.0.0
