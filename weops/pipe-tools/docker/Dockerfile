@@ -1,10 +1,10 @@
 #
 # build container
 #
-FROM --platform=linux/amd64 openjdk:7-jdk-alpine3.8 as builder
+FROM --platform=linux/amd64 openjdk:24-ea-11-jdk  as builder
 WORKDIR /
 
-COPY mongodb_exporter /mongodb_exporter
+COPY jdbc_exporter_linux_amd64 /jdbc_exporter_linux_amd64
 
 EXPOSE     9601
-ENTRYPOINT [ "/jdbc_exporter" ]
+ENTRYPOINT [ "/jdbc_exporter_linux_amd64" ]
