@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oscar-sql-config
+  namespace: jdbc-exporter
+data:
+  config.yml: |-
+    collector_name: oscar_collector
+    
+    metrics:
+      - metric_name: memory
+        help: 内存分布大小
+        type: gauge
+        labels:
+          - MEMORY_NAME
+        values:
+          - MEMORY_SIZE
+        query: |
+          SELECT MEMORY_NAME, MEMORY_SIZE FROM V$GLOBAL_MEMORY
+      
+      # connections
+      - metric_name: connections
+        help: 当前连接数
+        type: gauge
+        values:
+          - CONNECTIONS
+        query_ref: connection_query
+    
+      - metric_name: transactions
+        help: 当前事务数
+        type: gauge
+        values:
+          - TRANSACTIONS
+        query_ref: connection_query
+    
+      - metric_name: locks
+        help: 当前授予的锁数
+        type: gauge
+        values:
+          - LOCKS
+        query_ref: connection_query
+    
+    #   # SPC
+    #   - metric_name: spc_hit_ratio
+    #     help: SPC计划缓存命中率
+    #     type: gauge
+    #     values:
+    #       - HIT_RATIO
+    #     query_ref: SPC_query
+    #
+    #   - metric_name: spc_count
+    #     help: SPC计划缓存数量
+    #     type: gauge
+    #     values:
+    #       - SPC_COUNT
+    #     query_ref: SPC_query
+    #
+    #   - metric_name: spc_size
+    #     help: SPC计划缓存大小
+    #     type: gauge
+    #     values:
+    #       - SIZE
+    #     query_ref: SPC_query
+    #
+    #   - metric_name: spc_save_success_ratio
+    #     help: SPC计划缓存保存成功率
+    #     type: gauge
+    #     values:
+    #       - SAVE_SUCCESS_RATIO
+    #     query_ref: SPC_query
+    
+    queries:
+      - query_name: connection_query
+        query: |
+          SELECT
+              count(*) AS CONNECTIONS,
+              count("CURRENT XID") TRANSACTIONS,
+              sum("CURRENT LOCK") AS LOCKS
+          FROM
+              v_sys_sessions
+      
+      #   - query_name: SPC_query
+      #     query: |
+      #         SELECT
+      #             100.0 *(HITS / SEARCHES + 0.00001) AS HIT_RATIO,
+      #             SPC_COUNT,
+      #             SIZE,
+      #             100.0 *(SAVE_SUCCESSES / SAVES) AS SAVE_SUCCESS_RATIO
+      #         FROM
+      #             V$SPC_STAT
+    
+
+  launcher-static.yml: |-
+    configType: java
+    configVersion: 1
+    serviceName: primary
+    classpath:
+      - ./tmp/jdbc_exporter-1.0-SNAPSHOT-runner.jar
+    # jvmOpts:
+    #   - '-Xmx100M'

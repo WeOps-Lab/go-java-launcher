@@ -1,0 +1,7 @@
+configType: java
+configVersion: 1
+serviceName: primary
+classpath:
+  - ./tmp/jdbc_exporter-1.0-SNAPSHOT-runner.jar
+# jvmOpts:
+#   - '-Xmx100M'

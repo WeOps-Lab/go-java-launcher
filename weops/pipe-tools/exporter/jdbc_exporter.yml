@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: jdbc-exporter
+  namespace: jdbc-exporter
+spec:
+  serviceName: jdbc-exporter
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jdbc-exporter
+  template:
+    metadata:
+      annotations:
+        telegraf.influxdata.com/interval: 1s
+        telegraf.influxdata.com/inputs: |+
+          [[inputs.cpu]]
+            percpu = false
+            totalcpu = true
+            collect_cpu_time = true
+            report_active = true
+
+          [[inputs.disk]]
+            ignore_fs = ["tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs"]
+
+          [[inputs.diskio]]
+
+          [[inputs.kernel]]
+
+          [[inputs.mem]]
+
+          [[inputs.processes]]
+
+          [[inputs.system]]
+            fielddrop = ["uptime_format"]
+
+          [[inputs.net]]
+            ignore_protocol_stats = true
+
+          [[inputs.procstat]]
+          ## pattern as argument for pgrep (ie, pgrep -f <pattern>)
+            pattern = "exporter"
+        telegraf.influxdata.com/class: opentsdb
+        telegraf.influxdata.com/env-fieldref-NAMESPACE: metadata.namespace
+        telegraf.influxdata.com/limits-cpu: '300m'
+        telegraf.influxdata.com/limits-memory: '300Mi'
+      labels:
+        app: jdbc-exporter
+        exporter_type: jdbc-exporter
+        pod_type: exporter
+    spec:
+      nodeSelector:
+        node-role: worker
+      shareProcessNamespace: true
+      volumes:
+        - name: oscar-sql-config
+          configMap:
+            name: oscar-sql-config
+      containers:
+        - name: jdbc-exporter
+          image: registry-svc:25000/library/jdbc-exporter:latest
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 0
+          env:
+            - name: USERNAME
+              value: weops
+            - name: PASSWORD
+              value: Weops123!
+            - name: CONFIG_FILE_PATH
+              value: /collector/config.yml
+            - name: JDBC_URL
+              value: jdbc:oscar://10.10.90.115:2003/osrdb
+            - name: LAUNCHER_STATIC_FILE
+              value: /collector/launcher-static.yml
+            - name: QUARKUS_HTTP_HOST
+              value: 0.0.0.0
+            - name: QUARKUS_HTTP_PORT
+              value: "9601"
+          volumeMounts:
+            - mountPath: /collector
+              name: oscar-sql-config
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 300m
+              memory: 300Mi
+          ports:
+            - containerPort: 9601
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: jdbc-exporter
+  name: jdbc-exporter
+  namespace: jdbc-exporter
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9601"
+    prometheus.io/path: '/metrics'
+spec:
+  ports:
+    - port: 9601
+      protocol: TCP
+      targetPort: 9601
+  selector:
+    app: jdbc-exporter
