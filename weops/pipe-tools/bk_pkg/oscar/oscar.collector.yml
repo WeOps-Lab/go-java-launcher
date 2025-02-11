@@ -1,0 +1,435 @@
+collector_name: oscar_collector
+
+metrics:
+  # memory
+  - metric_name: memory_size
+    help: 内存分布大小(bytes)
+    type: gauge
+    labels:
+      - MEMORY_NAME
+    values:
+      - MEMORY_SIZE
+    query: |
+        SELECT MEMORY_NAME, MEMORY_SIZE FROM V$GLOBAL_MEMORY
+
+  # datafile
+  - metric_name: data_file_size
+    help: 数据文件大小(bytes)
+    type: gauge
+    labels:
+      - FILEID
+    values:
+      - SIZE
+    query_ref: datafile_query
+
+  - metric_name: data_file_free_size
+    help: 数据文件剩余空间(bytes)
+    type: gauge
+    labels:
+      - FILEID
+    values:
+      - FREESIZE
+    query_ref: datafile_query
+
+  - metric_name: data_file_usage_percent
+    help: 数据文件空间使用率(%)
+    type: gauge
+    labels:
+      - FILEID
+    values:
+      - USAGEPEC
+    query_ref: datafile_query
+
+  # logfile
+  - metric_name: log_size
+    help: 日志文件大小(bytes)
+    type: gauge
+    labels:
+      - FILEID
+    values:
+      - REALSIZE
+    query_ref: logfile_query
+
+  - metric_name: log_usage_ratio
+    help: 日志文件使用率(%)
+    type: gauge
+    labels:
+      - FILEID
+    values:
+      - USAGERATIO
+    query_ref: logfile_query
+
+  # log
+  - metric_name: log_total_size
+    help: 日志空间总大小(bytes)
+    type: gauge
+    labels:
+      - DBNAME
+    values:
+      - LOGTOTALSIZE
+    query_ref: log_query
+
+  - metric_name: log_total_usage_percent
+    help: 日志空间总使用率(%)
+    type: gauge
+    labels:
+      - DBNAME
+    values:
+      - LOGUSAGERATIO
+    query_ref: log_query
+
+  - metric_name: archive_mode
+    help: 归档模式状态 # NOARCHIVELOG=0; ARCHIVELOG=1
+    type: gauge
+    labels:
+      - DBNAME
+      - ARCHIVEPATH
+    values:
+      - ARCHIVEMODE_NUMERIC
+    query_ref: log_query
+
+  - metric_name: restart_lsn
+    help: 数据库恢复起始lsn
+    type: gauge
+    labels:
+      - DBNAME
+    values:
+      - RESTARTLSN
+    query_ref: log_query
+
+  - metric_name: archive_lsn
+    help: 数据库当前归档起始lsn
+    type: gauge
+    labels:
+      - DBNAME
+    values:
+      - ARCHIVELSN
+    query_ref: log_query
+
+  - metric_name: log_auto_shrink
+    help: 自动收缩模式状态 # ON=1; OFF=0
+    type: gauge
+    labels:
+      - DBNAME
+    values:
+      - LOGAUTOSHRINK_NUMERIC
+    query_ref: log_query
+
+  # log_segment
+  - metric_name: log_segment_size
+    help: 日志段大小(bytes)
+    type: gauge
+    labels:
+      - FILEID
+      - STATUS
+    values:
+      - SEGZIZE_SUM
+    query: |
+      SELECT FILEID, STATUS, sum(SEGSIZE) AS SEGZIZE_SUM FROM v_sys_logsegment_info GROUP BY FILEID, STATUS
+
+  # connections
+  - metric_name: current_connections
+    help: 当前连接数
+    type: gauge
+    values:
+      - CONNECTIONS
+    query_ref: connection_query
+
+  - metric_name: current_transactions
+    help: 当前事务数
+    type: gauge
+    values:
+      - TRANSACTIONS
+    query_ref: connection_query
+
+  - metric_name: current_locks
+    help: 当前授予的锁数
+    type: gauge
+    values:
+      - LOCKS
+    query_ref: connection_query
+
+
+  # SPC
+  - metric_name: spc_hit_percent
+    help: SPC计划缓存命中率(%)
+    type: gauge
+    values:
+      - HIT_RATIO
+    query_ref: SPC_query
+
+  - metric_name: spc_count
+    help: SPC计划缓存数量
+    type: gauge
+    values:
+      - SPC_COUNT
+    query_ref: SPC_query
+
+  - metric_name: spc_size
+    help: SPC计划缓存大小(bytes)
+    type: gauge
+    values:
+      - SIZE
+    query_ref: SPC_query
+
+  - metric_name: spc_save_success_ratio
+    help: SPC计划缓存保存成功率(%)
+    type: gauge
+    values:
+      - SAVE_SUCCESS_RATIO
+    query_ref: SPC_query
+
+  # lock time
+  - metric_name: lock_wait_time
+    help: 锁总等待时间 # (us)
+    type: gauge
+    labels:
+      - LOCK_TYPE
+    values:
+      - TOTAL_TIME
+    query_ref: lock_time_query
+
+  # deadlocks
+  - metric_name: deadlocks
+    help: 死锁次数
+    type: gauge
+    values:
+      - DEADLOCKS
+    query_ref: deadlock_query
+
+  # IO stats
+  - metric_name: single_read_size
+    help: 单块读取的总大小
+    type: gauge
+    labels:
+      - FILE_ID
+      - FILETYPE_NAME
+    values:
+      - SINGLEBLK_READ_MEGABYTES
+    query_ref: io_stat_query
+
+  - metric_name: single_write_size
+    help: 单块写入的总大小
+    type: gauge
+    labels:
+      - FILE_ID
+      - FILETYPE_NAME
+    values:
+      - SINGLEBLK_WRITE_MEGABYTES
+    query_ref: io_stat_query
+
+  - metric_name: multi_read_size
+    help: 多块读取的总大小
+    type: gauge
+    labels:
+      - FILE_ID
+      - FILETYPE_NAME
+    values:
+      - MULTIBLK_READ_MEGABYTES
+    query_ref: io_stat_query
+
+  - metric_name: multi_write_size
+    help: 多块写入的总大小
+    type: gauge
+    labels:
+      - FILE_ID
+      - FILETYPE_NAME
+    values:
+      - MULTIBLK_WRITE_MEGABYTES
+    query_ref: io_stat_query
+
+  - metric_name: single_reads
+    help: 单块读取的次数
+    type: gauge
+    labels:
+      - FILE_ID
+      - FILETYPE_NAME
+    values:
+      - SINGLEBLK_READ_REQS
+    query_ref: io_stat_query
+
+  - metric_name: single_writes
+    help: 单块写入的次数
+    type: gauge
+    labels:
+      - FILE_ID
+      - FILETYPE_NAME
+    values:
+      - SINGLEBLK_WRITE_REQS
+    query_ref: io_stat_query
+
+  - metric_name: multi_reads
+    help: 多块读取的次数
+    type: gauge
+    labels:
+      - FILE_ID
+      - FILETYPE_NAME
+    values:
+      - MULTIBLK_READ_REQS
+    query_ref: io_stat_query
+
+  - metric_name: multi_writes
+    help: 多块写入的次数
+    type: gauge
+    labels:
+      - FILE_ID
+      - FILETYPE_NAME
+    values:
+      - MULTIBLK_WRITE_REQS
+    query_ref: io_stat_query
+
+  - metric_name: single_read_time
+    help: 单块读取所用的总时间
+    type: gauge
+    labels:
+      - FILE_ID
+      - FILETYPE_NAME
+    values:
+      - SINGLEBLK_READ_SERVICETIME
+    query_ref: io_stat_query
+
+  - metric_name: single_write_time
+    help: 单块写入所用的总时间
+    type: gauge
+    labels:
+      - FILE_ID
+      - FILETYPE_NAME
+    values:
+      - SINGLEBLK_WRITE_SERVICETIME
+    query_ref: io_stat_query
+
+  - metric_name: multi_read_time
+    help: 多块读取所用的总时间
+    type: gauge
+    labels:
+      - FILE_ID
+      - FILETYPE_NAME
+    values:
+      - MULTIBLK_READ_SERVICETIME
+    query_ref: io_stat_query
+
+  - metric_name: multi_write_time
+    help: 多块写入所用的总时间
+    type: gauge
+    labels:
+      - FILE_ID
+      - FILETYPE_NAME
+    values:
+      - MULTIBLK_WRITE_SERVICETIME
+    query_ref: io_stat_query
+
+queries:
+  - query_name: memory_query
+    query: |
+      SELECT
+          MEMORY_NAME,
+          MEMORY_SIZE
+      FROM
+          V$GLOBAL_MEMORY
+
+  - query_name: connection_query
+    query: |
+      SELECT
+          count(*) AS CONNECTIONS,
+          count("CURRENT XID") AS TRANSACTIONS,
+          sum("CURRENT LOCK") AS LOCKS
+      FROM
+          v_sys_sessions
+
+  - query_name: lock_time_query
+    query: |
+      SELECT
+          LOCK_TYPE,
+          sum(TOTAL_WAIT_TIME) AS TOTAL_TIME
+      FROM
+          V$LOCK_STAT
+      GROUP BY
+          LOCK_TYPE
+
+  - query_name: deadlock_query
+    query: |
+      SELECT
+          value AS DEADLOCKS
+      FROM
+          V$SYSSTAT
+      WHERE
+          name = 'DEADLOCKS'
+
+  - query_name: io_stat_query
+    query: |
+      SELECT
+          FILE_ID,
+          FILETYPE_NAME,
+          SINGLEBLK_READ_MEGABYTES,
+          SINGLEBLK_WRITE_MEGABYTES,
+          MULTIBLK_READ_MEGABYTES,
+          MULTIBLK_WRITE_MEGABYTES,
+          SINGLEBLK_READ_REQS,
+          SINGLEBLK_WRITE_REQS,
+          MULTIBLK_READ_REQS,
+          MULTIBLK_WRITE_REQS,
+          SINGLEBLK_READ_SERVICETIME,
+          SINGLEBLK_WRITE_SERVICETIME,
+          MULTIBLK_READ_SERVICETIME,
+          MULTIBLK_WRITE_SERVICETIME
+      FROM
+          V$FILE_IO_STAT
+
+  - query_name: datafile_query
+    query: |
+      SELECT
+          FILEID,
+          SIZE,
+          FREESIZE,
+          100.0 *(SIZE - FREESIZE) / SIZE AS USAGEPEC
+      FROM
+          v_sys_datafile_info
+
+  - query_name: datafile_query
+    query: |
+      SELECT
+          FILEID,
+          SIZE,
+          FREESIZE,
+          100.0 *(SIZE - FREESIZE) / SIZE AS USAGEPEC
+      FROM
+          v_sys_datafile_info
+
+  - query_name: logfile_query
+    query: |
+      SELECT
+          FILEID,
+          REALSIZE,
+          USAGERATIO
+      FROM
+          v_sys_logfile_info;
+
+  - query_name: log_query
+    query: |
+      SELECT
+          DBNAME,
+          LOGTOTALSIZE,
+          LOGUSAGERATIO,
+          CASE LOGAUTOSHRINK
+              WHEN 'on' THEN 1
+              ELSE 0
+          END AS LOGAUTOSHRINK_NUMERIC,
+          CASE ARCHIVEMODE
+              WHEN 'ARCHIVELOG' THEN 1
+              ELSE 0
+          END AS ARCHIVEMODE_NUMERIC,
+          ARCHIVEPATH,
+          RESTARTLSN,
+          ARCHIVELSN
+      FROM
+          v_sys_database_info
+
+  - query_name: SPC_query
+    query: |      
+      SELECT
+        100.0 * (HITS / (SEARCHES + 0.00001)) AS HIT_RATIO,
+        SPC_COUNT,
+        SIZE,
+        CASE WHEN SAVES = 0 THEN 0 ELSE 100.0 * (SAVE_SUCCESSES / SAVES) END AS SAVE_SUCCESS_RATIO
+      FROM
+        V$SPC_STAT
