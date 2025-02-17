@@ -73,22 +73,21 @@ GRANT SELECT ON V$SPC_STAT TO weops;
 | oscardb_exporter_spc_count                | 计划缓存数量    | -                              | -                | -       |
 | oscardb_exporter_spc_size                 | 计划缓存大小    | -                              | -                | bytes   |
 | oscardb_exporter_spc_save_success_percent | 计划缓存保存成功率 | -                              | -                | percent |
-| oscardb_exporter_lock_wait_time           | 锁等待时间     | LOCK_TYPE                      | 锁类型              | µs      |
-| oscardb_exporter_deadlocks                | 死锁次数      | -                              | -                | -       |
-| oscardb_exporter_single_read_size         | 单块读取量     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | bytes   |
-| oscardb_exporter_single_write_size        | 单块写入量     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | bytes   |
-| oscardb_exporter_multi_read_size          | 多块读取量     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | bytes   |
-| oscardb_exporter_multi_write_size         | 多块写入量     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | bytes   |
-| oscardb_exporter_single_reads             | 单块读次数     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | -       |
-| oscardb_exporter_single_writes            | 单块写次数     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | -       |
-| oscardb_exporter_multi_reads              | 多块读次数     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | -       |
-| oscardb_exporter_multi_writes             | 多块写次数     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | -       |
-| oscardb_exporter_single_read_time         | 单块读耗时     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | µs      |
-| oscardb_exporter_single_write_time        | 单块写耗时     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | µs      |
-| oscardb_exporter_multi_read_time          | 多块读耗时     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | µs      |
-| oscardb_exporter_multi_write_time         | 多块写耗时     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | µs      |
+| oscardb_exporter_lock_wait_time_total     | 锁等待时间     | LOCK_TYPE                      | 锁类型              | µs      |
+| oscardb_exporter_deadlocks_total          | 死锁次数      | -                              | -                | -       |
+| oscardb_exporter_single_read_size_total   | 单块读取量     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | bytes   |
+| oscardb_exporter_single_write_size_total  | 单块写入量     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | bytes   |
+| oscardb_exporter_multi_read_size_total    | 多块读取量     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | bytes   |
+| oscardb_exporter_multi_write_size_total   | 多块写入量     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | bytes   |
+| oscardb_exporter_single_reads_total       | 单块读次数     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | -       |
+| oscardb_exporter_single_writes_total      | 单块写次数     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | -       |
+| oscardb_exporter_multi_reads_total        | 多块读次数     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | -       |
+| oscardb_exporter_multi_writes_total       | 多块写次数     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | -       |
+| oscardb_exporter_single_read_time_total   | 单块读耗时     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | µs      |
+| oscardb_exporter_single_write_time_total  | 单块写耗时     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | µs      |
+| oscardb_exporter_multi_read_time_total    | 多块读耗时     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | µs      |
+| oscardb_exporter_multi_write_time_total   | 多块写耗时     | FILEID, FILETYPE_NAME          | 文件ID, 文件类型       | µs      |
 | jdbc_scrape_error                         | 采集异常状态    | job                            | 任务名称             | -       |
-
 
 ### 版本日志
 
